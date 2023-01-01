@@ -1,6 +1,6 @@
-import socketio, threading, turtle
+import socketio, threading, turtle, time
 from tkinter import *
-from tkinter import simpledialog
+from tkinter import simpledialog, ttk
 
 class HangmanClient:
     def __init__(self) -> None:
@@ -27,7 +27,7 @@ class HangmanClient:
         self.root.protocol('WM_DELETE_WINDOW', self.on_close)
         self.root.configure(background="white")
 
-        threading.Thread(target=self.run_socket, daemon=True).start()
+        
         self.guessed_letters = []
 
         self.leaderboard = Frame(self.root, background="#ededed")
@@ -51,7 +51,8 @@ class HangmanClient:
         self.hangman.grid(row=2, column=2, rowspan=2, sticky=NSEW)
         self.hangman_screen = turtle.TurtleScreen(self.hangman)
         self.animator = turtle.RawTurtle(self.hangman)
-        self.animator.hideturtle()
+        self.animator.speed(10)
+        #self.animator.hideturtle()
         self.animator.pensize(5)
         self.animations = [
             lambda: self.draw_limb(self.animator.pos(), '30', 80, '-'),
@@ -91,15 +92,22 @@ class HangmanClient:
                 btn = Button(self.keyboard, text=key.upper(), command=guess, highlightbackground="white", font=("Comic Sans MS", 20))
                 self.keybuttons[key] = btn
                 btn.grid(row=row, column=col, padx=2, pady=2, ipady=5, sticky=NSEW)
-
+        
+        self.style = ttk.Style()
+        self.style.theme_use("default")
+        self.style.configure("TProgressbar", thickness=50, background="#378D99", foreground="#378D99", troughcolor="#2d2d2d")
+        self.time_bar = ttk.Progressbar(self.keyboard, orient=HORIZONTAL, mode='determinate', value=100, style="TProgressbar")
+        #self.time_bar.grid(row=3, column=0, columnspan=10, sticky=NSEW)
+        self.display_time = Label(self.keyboard, font=("Comic Sans MS", 30), bg="white", fg="black")
         
         self.root.columnconfigure((0, 1, 2), weight=2)
         self.root.rowconfigure(3, weight=1)
         self.root.bind('<KeyRelease>', guess)
 
         self.keyboard.columnconfigure((0, 1, 2, 3, 4, 5, 6, 7, 8, 9), weight=1)
-        self.keyboard.rowconfigure((0, 1, 2), weight=1)
+        self.keyboard.rowconfigure((0, 1, 2, 3, 4), weight=1)
         
+        threading.Thread(target=self.run_socket, daemon=True).start()
 
         self.root.mainloop()
     
@@ -108,33 +116,28 @@ class HangmanClient:
         if msg['type'] == 'new_puzzle':
             self.display_theme['text'] = msg['theme']
             self.display_word['text'] = ''.join(msg['split_word'])
-            self.header['text'] = f"Puzzle {msg['puzzle_number']}"
+            self.header['text'] = f"Puzzle {msg['puzzle_number']} of 5"
+            self.guessed_letters.clear()
         if msg['type'] == 'guess':
             self.display_word['text'] = ''.join(msg['split_word'])
             if not msg['guessed']:
-                self.animation_queue.append(self.animations[msg['tries']])
-                while True:
-                    if len(self.animation_queue) == 1:
-                        self.animation_queue[0]()
-                        self.animation_queue.pop(0)
-                        break
+                self.display_tries['text'] = f"Tries Left: {msg['tries']}"
+                threading.Thread(target=lambda: self.do_animation(msg['tries']), daemon=True).start()
+                
         if msg['type'] == 'leaderboard_update':
-            print(msg)
             n = 0
             for f in self.leaderboard_frames: 
                 for w in f.winfo_children(): w.destroy()
             
             for player in msg['standings']:
                 try:
-
-                    print(player)
                     if n % 2 == 1:
                         color = "#eeeeee"
                     else:
                         color = "#e1e1e1"
                     self.leaderboard_frames[n]['bg'] = color
                     self.leaderboard_frames[n].grid(row=n+1, column=0, sticky='ew')
-                    Label(self.leaderboard_frames[n], text=player[0], font=("Comic Sans MS", 15), bg=color, fg="black").grid(row=0, column=0)
+                    Label(self.leaderboard_frames[n], text=player[0].upper(), font=("Comic Sans MS", 15), bg=color, fg="black").grid(row=0, column=0)
                     Label(self.leaderboard_frames[n], text=player[1], font=("Comic Sans MS", 15), bg=color, fg="black").grid(row=1, column=0)
                     if player[2] == '✓' or player[2] == '𐄂':
                         Label(self.leaderboard_frames[n], text=player[2], font=("Arial", 30), bg=color, fg="black").grid(row=0, column=3, rowspan=2)
@@ -142,7 +145,34 @@ class HangmanClient:
                         Label(self.leaderboard_frames[n], text=player[2], font=("Comic Sans MS", 20), bg=color, fg="black").grid(row=0, column=3, rowspan=2)
                     n += 1
                 except IndexError as e:
-                    print(e)
+                    continue
+        
+        if msg['type'] == 'time_update':
+            self.time_bar.grid(row=4, column=0, columnspan=10, sticky=NSEW)
+            self.display_time.grid(row=3, column=0, columnspan=10, sticky=NSEW)
+            self.time_bar['value'] = (msg['time']/msg['total'])*100
+            if msg['keyword'] == 'puzzle':
+                self.display_time['text'] = f"Time Left: {msg['time']} seconds"
+            elif msg['keyword'] == 'w_puzzle':
+                self.display_time['text'] = f"New puzzle in: {msg['time']} seconds"
+            else:
+                self.display_time['text'] = f"{msg['winners'].upper()} won this round. Next round in: {msg['time']} seconds"
+        
+        if msg['type'] == 'wait':
+            self.time_bar.grid(row=4, column=0, columnspan=10, sticky=NSEW)
+            self.display_time.grid(row=3, column=0, columnspan=10, sticky=NSEW)
+            self.time_bar['value'] = (msg['time']/msg['total'])*100
+            self.display_time['text'] = f"Time Left: {msg['time']}"
+        
+        if msg['type'] == 'split_word_update':
+            self.display_word['text'] = ''.join(msg['split_word'])
+            self.display_tries['text'] = f"Tries Left: "
+            self.time_bar.grid_forget()
+            self.display_time.grid_forget()
+            self.animator.clear()
+            self.animator.setheading(0)
+            
+        
         
     def on_close(self):
         self.socketclient.send({'type': 'quit'})
@@ -179,12 +209,24 @@ class HangmanClient:
 
     def draw_limb(self, body_pos, angle, distance, left_limb=""):
         body_pos = self.animator.pos()
-        print(left_limb)
         self.animator.left(eval(left_limb + angle))
         self.animator.forward(distance)
         self.animator.left(eval(left_limb + '-' + angle))
         self.move(*body_pos)
         if left_limb: self.move(self.animator.pos()[0], self.animator.pos()[1] - 40)
+
+    def do_animation(self, tries):
+        while True:
+            if len(self.animation_queue) <= 1:
+                self.animation_queue.append(self.animations[tries])
+                break
+            time.sleep(0.25)
+        while True:
+            if len(self.animation_queue) == 1:
+                self.animation_queue[0]()
+                self.animation_queue.pop(0)
+                break
+            time.sleep(0.25)
     
 
 HangmanClient()
