@@ -1,4 +1,4 @@
-from flask_socketio import SocketIO, send, join_room
+from flask_socketio import SocketIO, send, join_room, leave_room
 from flask import Flask , request
 from data import words
 import os, uuid, random, re, time
@@ -16,6 +16,18 @@ def newPuzzle():
             gameData['split_word'][w] = '_  '*len(gameData['split_word'][w])
         else:
             gameData['split_word'][w] = '  ' + gameData['split_word'][w] + '  '
+
+def update_standings():
+    standings = []
+    for p in list(players.values()):
+        if p['guessed_right']:
+            standings.append([p['name'], p['score'], '✓'])
+        elif p['guessed_wrong']:
+            standings.append([p['name'], p['score'], '𐄂'])
+        else:
+            standings.append([p['name'], p['score'], f"{p['letters_guessed']}/{gameData['word_length']}"])
+    standings = sorted(standings, key=lambda x: x[1], reverse=True)
+    send({'type': 'leaderboard_update', 'standings': standings}, room=gameData['game_id'])
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -47,18 +59,18 @@ def handle_message(msg):
             gameData['game_started'] = True
             gameData['puzzle_number'] = 0
             newPuzzle()
-            players[player_id]['split_word'] = gameData['split_word']
-            player = list(players.keys())[0]
+            player1 = list(players.keys())[0]
+            players[player1]['split_word'] = gameData['split_word'][:]
             data = {
-                **players[player], 
+                **players[player1], 
                 'type': 'new_puzzle',
                 'theme': gameData['theme'],
                 'puzzle_number': gameData['puzzle_number']
             }
-            send(data, room=player)
+            send(data, room=player1)
         
         if len(players) >= 2:
-            players[player_id]['split_word'] = gameData['split_word']
+            players[player_id]['split_word'] = gameData['split_word'][:]
             data = {
                 **players[player_id], 
                 'type': 'new_puzzle',
@@ -66,12 +78,10 @@ def handle_message(msg):
                 'puzzle_number': gameData['puzzle_number']
             }
             send(data, room=player_id)
-            standings = [[p['name'], p['score'], f"{p['letters_guessed']}/{gameData['word_length']}"] for p in list(players.values())]
-            standings = sorted(data, key=lambda x: x[1], reverse=True)
-            send({'type': 'leaderboard_update', 'standings': standings}, room=gameData['game_id'])
+            update_standings()
     
     
-    if msg['type'] == 'guess' and gameData['game_started'] and not(players[player_id]['guessed_right'] and players[player_id]['guessed_wrong']):
+    if msg['type'] == 'guess' and gameData['game_started'] and not(players[player_id]['guessed_right'] or players[player_id]['guessed_wrong']):
         print(msg['guess'])
         data_to_send = msg
         csw = players[player_id]['split_word']
@@ -97,11 +107,14 @@ def handle_message(msg):
             players[player_id]['guessed_right'] = True
             players[player_id]['time'] = time.time() - gameData['start_time']
         send({**data_to_send, **players[player_id]}, room=player_id)
+        update_standings()
         #send({'type': 'leaderboard_update', **players}, room=gameData['game_id'])
 
     if msg['type'] == 'quit':
         print(players[player_id], 'quits the game')
         players.pop(player_id)
+        leave_room(gameData['game_id'], player_id)
+        update_standings()
         if len(players) == 0:
             gameData['game_started'] = False
 
