@@ -4,16 +4,17 @@ from tkinter import simpledialog, ttk
 
 class HangmanClient:
     def __init__(self) -> None:
-        #self.address = simpledialog.askstring(title="Connect", prompt="Enter server address")
-        self.address = 'http://127.0.0.1:8080'
-        if self.address:
+        self.root = Tk()
+        self.root.withdraw()
+        self.url = simpledialog.askstring(title="Connect", prompt="Enter url")
+        if self.url:
             self.name = simpledialog.askstring(title="Name", prompt="Enter your name")
             if self.name: self.start_application()
     
     def run_socket(self):
 
         self.socketclient = socketio.Client()
-        self.socketclient.connect(self.address)
+        self.socketclient.connect(self.url)
         self.socketclient.send({'type': 'join', 'name': self.name})
 
         @self.socketclient.on('message')
@@ -21,7 +22,7 @@ class HangmanClient:
             self.handle_message(msg)
 
     def start_application(self):
-        self.root = Tk()
+        self.root.deiconify()
         self.root.title("Hangman")
         self.root.geometry("1280x720")
         self.root.protocol('WM_DELETE_WINDOW', self.on_close)
@@ -42,7 +43,7 @@ class HangmanClient:
             f.columnconfigure((0, 1, 2, 3), weight=1)
             self.leaderboard_frames.append(f)
 
-        self.display_theme = Label(self.root, text="Game starts if there is more than 1 player", font=("Comic Sans MS", 40), bg="white", fg="black")
+        self.display_theme = Label(self.root, text="Game starts if there is more than 1 player", font=("Comic Sans MS", 35), bg="white", fg="black")
         self.display_theme.grid(row=0, column=1, columnspan=2, sticky=NSEW)
         self.display_word = Label(self.root, font=("Comic Sans MS", 30), bg="white", fg="black")
         self.display_word.grid(row=1, column=1, columnspan=2, sticky=NSEW)
@@ -52,7 +53,7 @@ class HangmanClient:
         self.hangman_screen = turtle.TurtleScreen(self.hangman)
         self.animator = turtle.RawTurtle(self.hangman)
         self.animator.speed(10)
-        #self.animator.hideturtle()
+        self.animator.hideturtle()
         self.animator.pensize(5)
         self.animations = [
             lambda: self.draw_limb(self.animator.pos(), '30', 80, '-'),
@@ -83,13 +84,15 @@ class HangmanClient:
                 def guess(event=key):
                     try:
                         guessed_letter = event.char
+                        if Entry == type(event.widget):
+                            return
                     except AttributeError:
                         guessed_letter = event
                     guessed_letter = guessed_letter.replace(' ', '')
                     if guessed_letter and not(guessed_letter in self.guessed_letters):
                         self.guessed_letters.append(guessed_letter)
                         self.socketclient.send({'type': 'guess', 'guess': guessed_letter})
-                btn = Button(self.keyboard, text=key.upper(), command=guess, highlightbackground="white", font=("Comic Sans MS", 20))
+                btn = Button(self.keyboard, text=key.upper(), command=guess, highlightbackground="black", font=('Comic Sans MS', 20), disabledforeground="black")
                 self.keybuttons[key] = btn
                 btn.grid(row=row, column=col, padx=2, pady=2, ipady=5, sticky=NSEW)
         
@@ -98,8 +101,26 @@ class HangmanClient:
         self.style.configure("TProgressbar", thickness=50, background="#378D99", foreground="#378D99", troughcolor="#2d2d2d")
         self.time_bar = ttk.Progressbar(self.keyboard, orient=HORIZONTAL, mode='determinate', value=100, style="TProgressbar")
         #self.time_bar.grid(row=3, column=0, columnspan=10, sticky=NSEW)
-        self.display_time = Label(self.keyboard, font=("Comic Sans MS", 30), bg="white", fg="black")
-        
+        self.display_time = Label(self.keyboard, font=("Comic Sans MS", 25), bg="white", fg="black")
+
+        self.chatting_frame = Frame(self.root, background="white", highlightthickness=3, highlightcolor="black")
+        self.chatting_frame.grid(row=3, column=1, sticky=NSEW, padx=5, pady=5)
+        self.chatting_frame.rowconfigure(0, weight=8)
+        self.chatting_frame.rowconfigure(1, weight=1)
+        self.chatting_frame.columnconfigure(0, weight=1)
+
+        self.chat = Text(self.chatting_frame, font=("Calibri", 20), bg="white", fg="black", height=1, width=1, highlightthickness=0)
+        self.chat.grid(row=0, column=0, sticky=NSEW, padx=5, pady=5)
+        self.chat.bind('<Button>', lambda _: 'break')
+
+        self.chat_input = Entry(self.chatting_frame, font=("Comic Sans MS", 15), bg="white", fg="black", insertbackground="black")
+        self.chat_input.grid(row=1, column=0, sticky=EW, padx=5)
+        self.chat_input.insert(0, "Type something to chat...")
+        self.chat_input.bind('<Button>', self.focus)
+        self.chat_input.bind('<Return>', self.send_chat)
+        self.chat_input.bind('<Escape>', self.unfocus)
+        self.chatting_frame.bind('<Leave>', self.unfocus)
+
         self.root.columnconfigure((0, 1, 2), weight=2)
         self.root.rowconfigure(3, weight=1)
         self.root.bind('<KeyRelease>', guess)
@@ -111,18 +132,39 @@ class HangmanClient:
 
         self.root.mainloop()
     
+    def unfocus(self, *args):
+        self.chat_input['bg'] = 'white'
+        self.root.focus()
     
+    def focus(self, *args):
+        self.chat_input['bg'] = '#f6f6f6'
+        if self.chat_input.get() == "Type something to chat...": self.chat_input.delete(0, END)
+
+    def send_chat(self, *args):
+        text = self.chat_input.get().replace(' ', '')
+        if len(text) > 0: 
+            self.socketclient.send({'type': 'chat', 'message': text})
+            self.chat_input.delete(0, END)
+        self.root.focus()
+
     def handle_message(self, msg):
         if msg['type'] == 'new_puzzle':
             self.display_theme['text'] = msg['theme']
             self.display_word['text'] = ''.join(msg['split_word'])
             self.header['text'] = f"Puzzle {msg['puzzle_number']} of 5"
             self.guessed_letters.clear()
+            for button in self.keybuttons.values():
+                button['highlightbackground'] = "black"
+                button['state'] = NORMAL
         if msg['type'] == 'guess':
             self.display_word['text'] = ''.join(msg['split_word'])
+            self.keybuttons[msg['guess']]['state'] = 'disabled'
             if not msg['guessed']:
+                self.keybuttons[msg['guess']]['highlightbackground'] = "red"
                 self.display_tries['text'] = f"Tries Left: {msg['tries']}"
                 threading.Thread(target=lambda: self.do_animation(msg['tries']), daemon=True).start()
+            else:
+                self.keybuttons[msg['guess']]['highlightbackground'] = "green"
                 
         if msg['type'] == 'leaderboard_update':
             n = 0
@@ -147,6 +189,10 @@ class HangmanClient:
                 except IndexError as e:
                     continue
         
+        if msg['type'] == 'chat':
+            self.chat.insert(END, msg['message'])
+            self.chat.see('end')
+
         if msg['type'] == 'time_update':
             self.time_bar.grid(row=4, column=0, columnspan=10, sticky=NSEW)
             self.display_time.grid(row=3, column=0, columnspan=10, sticky=NSEW)
@@ -166,13 +212,11 @@ class HangmanClient:
         
         if msg['type'] == 'split_word_update':
             self.display_word['text'] = ''.join(msg['split_word'])
-            self.display_tries['text'] = f"Tries Left: "
+            self.display_tries['text'] = "Tries Left: "
             self.time_bar.grid_forget()
             self.display_time.grid_forget()
             self.animator.clear()
             self.animator.setheading(0)
-            
-        
         
     def on_close(self):
         self.socketclient.send({'type': 'quit'})
