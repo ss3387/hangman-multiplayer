@@ -1,31 +1,44 @@
 words = {
-    'Science': [
-        "oxygen", "nitrogen", "pottasium", "silicon", "neutron", "electricity",
-        "energy", "plant cell", "bacteria", "electrolyte", "electron", "distillation",
-        "atmospheric pressure", "fungi", "corona-virus", "vaccine", "antibiotic",
-        "cobalt", "nickel", "engineering", "chemistry", "physics", "manganese",
-        "transition metals", "alkaline earth metals", "standard unit", "displacement"
-        "velocity", "momentum", "photosynthesis", "chlorophyll", "source of energy"
+    'Measurement': [
+        "centimetres", "kilometers", "kilograms", "grams", "millilitres", "velocity",
+        "temperature", "milliamperes", "light years", "molar mass", "density", "kilojoules",
+        "atmospheres", "pascals", "calories", "newtons", "megabytes", "seconds", "minutes",
+        "centigrade", "fahrenheit", "kelvin", "candelas", "square feet", "weight",
+        "grams per centimeter cubed", "perimeter", "volume", "surface area", "kilovolts"
     ],
-    'Science': [
-        "newton's law of motion", "copper", "conservation of energy", "nuclear fusion",
-        "lithium ion battery", "positive ion", "hydrogen", "helium", "nucleus", "decomposition",
-        "combustion", "periodic table", "electrolysis", "taxonomy", "noble gases", "halogens",
-        "transition metals", "gamma waves", "ultraviolet waves", "speed of light",
-        "dichotomus key", "krypton", "aluminium", "thermal physics", "radioactivity",
-        "density", "stoichiometry", "avogadro's constant", "wavelength", "frequency"
+    'Periodic Table': [
+        "hydrogen", "helium", "lithium", "beryllium", "nitrogen", "fluorine", "noble gases",
+        "transition metals", "alkaline earth metals", "non-metals", "metalloids", "halogens",
+        "uranium", "potassium", "phosphorus", "pnictogens", "chalcogens", "lanthanoids",
+        "actinoids", "atomic symbol", "valence electrons", "isotopes", "manganese",
+        "neptunium", "dysprosium", "francium", "gallium", "radium", "strontium", "cadmium"
     ],
-    'History': [
-        "the great war", "christ era", "cold war", "revolution", "middle ages",
-        "joseph stalin", "vladimir lenin", "arab spring", "adolf hitler", "alexander the great",
-        "roman empire", "conflict", "treaty", "causation", "austro-hungarian empire",
-        "democracy", "partition", "monarchy", "dictatorship", "capitalism", "communism"
+    'Mathematics Vocabulary': [
+        "straight angle", "perpendicular", "radius", "diameter", "sector", "segment",
+        "rectangle", "quadrilateral", "right-angled triangle", "trigonometry", "cylinder",
+        "parallel lines", "transversal", "corresponding angles", "alternate angles",
+        "quotient", "remainder", "coordinate", "denominator", "numerator", "equation",
+        "decimal", "probability", "circumference", "parabola", "logarithms", "exponents"
     ],
-    'Places': [
-        "berlin wall", "cologne cathedral", "statue of liberty", "himalayas", "mount everest",
-        "red fort", "black forest", "eiffel tower", "taj mahal", "colosseum", "great wall of china",
-        "rhine falls", "niagara falls", "palace of versallies", "grand canyon", "mount fuji",
-        "amsterdam", "antarctica", "baltic sea", "alps mountains", "venice", "bering strait"
+    'Historical Events: 18th-19th century': [
+        "industrial revolution", "great northern war", "war of spanish succession",
+        "russo-persian war", "french revolution", "american revolution", "napoleonic wars",
+        "meiji restoration", "taiping rebellion", "american civil war", "spanish-american war"
+        "boxer rebellion", "discovery of antarctica", "sino-japanese war"
+    ],
+    'Historical Events: 20th-21st century':[
+        "the great war", "world war two", "russian revolution", "chinese communist revolution",
+        "bangladesh liberation war", "nineteen thrity six olympics", "cold war",
+        "dissolution of soviet union", "arab spring", "kennedy's assasination"
+        "japanese expansion", "the manhattan project", "the holocaust", "the space race",
+        "reunification of germany", "russia's invasion of ukraine", "nato expansion"
+    ],
+    'Places in Europe': [
+        "berlin wall", "rhine falls", "black forest", "colosseum", "eiffel tower",
+        "st beatus caves", "amsterdam", "vienna", "ice caves", "acropolis of athens",
+        "stonehenge", "louvre museum", "prague castle", "brandenburg gate", "venice",
+        "matterhorn", "alhambra and generalife gardens", "neuschwanstein castle",
+        "big ben", "palace of versailles", "mount rigi", "jungfraujoch", "giessbach falls"
     ],
     'Food and Drinks': [
         "french fries", "pizza", "noodles", "burger", "cheese cake", "spaghetti", "croissant",
@@ -33,39 +46,26 @@ words = {
         "milk chocolate", "almond milk", "cashew nuts", "green tea", "coffee", "wine",
         "boiled potatoes", "potato chips", "ice cream", "wall nuts", "vegetable salad"
     ],
-    'Sports': [
+    'All about Sports': [
         "european football", "basketball", "ice hockey", "badminton", "cricket", "racqet", 
-        "skiing", "goal post", "hockey stick", "baseball bat", "wheelchair tennis", "shuttle cock",
+        "skiing", "goal post", "hockey stick", "baseball bat", "wheelchair tennis",
         "badminton net", "shoes", "biking", "american football", "fifa tournament",
-        "swimming", "weight lifting", "ice skating", "olympics", "tennis ball"
+        "swimming", "weight lifting", "ice skating", "olympics", "tennis ball", "shuttle cock",
+        "boxing", "olympics", "ping pong", "semi-finals", "dodgeball", "bowling"
     ],
-    'Transportation': [
-        "railways", "waterways", "aircraft", "submarine", "fighter jet", "cargo tram",
-        "passengers", "distance", "fastest route", "maglev technology", "internal combustion engine",
-        "pilot", "bus-network", "racecar", "wheel", "steam engine", "wagon", "boxcar",
-        "infrastructure", "highways", "roadways", "ferry", "ship", "helicopter"
-    ],
-    'Music': [
+    'Musical Instruments and Genres': [
         "piano", "flute", "violin", "triangle", "sleigh bells", "guitar", "drum set",
         "timpani", "alto saxophone", "clarinet", "keyboard", "piccolo", "choir", "jazz",
-        "orchestra", "ensemble", "cello", "double bass", "string instrument", "basoon",
-        "euphonium", "french horn", "trumpet", "baritone", "oboe", "rock band", "waltz"
+        "cello", "double bass", "string instrument", "basoon", "euphonium", "french horn", 
+        "trumpet", "baritone", "oboe", "rock music", "waltz", "synthesizer", "pop music",
+        "hip hop music", "reggae", "swing", "flamenco", "rock and roll", "alternative rock"
     ],
-    'Famous People': [
-        "ludwig van beethoven", "albert einstein", "isaac newton", "mike tyson", "nelson mandela",
-        "charles darwin", "william shakesphere", "abraham lincoln", "mahatma gandhi", "pablo picasso",
-        "martin luther king", "bill gates", "elon musk", "muhammad ali", "christopher columbus",
-        "marie curie", "johann sebastian bach", "vincent van gogh", "leonardo da vinci"
-    ],
-    'Mathematics': [
-        "quadrilateral", "transversal", "cosine rule", "pythagoras theorem", "pentagon", "perimeter",
-        "parabola", "hyperbola", "ellipse graph", "square root", "modulus or remainder",
-        "remainder theorem", "alternate angles", "pi r squared", "half base height", "reflex angle",
-        "vertical stretch", "horizontal shift", "statistics and probability", "straight angle",
-        "compass", "ruler", "centimetres", "metric system", "simultaneous equations"
-    ],
-    'Cars': [
-        "lamborghini sian roadster", "porsche taycan", "tesla model s", "aston martin valkyrie",
-        "ford mustang", "toyota innova", "honda civic", "hyundai accent", ""
-    ],
+    
+    'Popular Artists, Scientists and writers': [
+        "ludwig van beethoven", "albert einstein", "isaac newton", "charles darwin", 
+        "william shakesphere", "pablo picasso", "richard feynman", "galileo galilei"
+        "marie curie", "johann sebastian bach", "vincent van gogh", "leonardo da vinci",
+        "thomas edison", "nikola tesla", "michael jackson", "stephen hawking",
+        "taylor swift", "johannes brahms", "jk rowling", "charles dickens", "aryabhatta"
+    ]
 }
